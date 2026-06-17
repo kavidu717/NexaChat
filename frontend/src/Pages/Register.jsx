@@ -50,14 +50,27 @@ export default function Register() {
 
   return (
     <>
-      <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h2 className="text-3xl font-bold text-center text-slate-800 mb-6">Create Account</h2>
-        
-        {/* Display error message if there is one */}
-        {error && <div className="bg-red-100 text-red-600 p-3 rounded mb-4 text-center">{error}</div>}
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4 relative overflow-hidden">
+      
+      {/* පිටුපසින් පෙනෙන ලස්සන කොළ පැහැති Ambient Glow එක (පින්තූරයේ තිබුණා වගේ) */}
+      <div className="absolute w-[400px] h-[400px] bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none"></div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Dark Glassmorphism Card */}
+      <div className="relative bg-slate-900/80 backdrop-blur-xl p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-800">
+        
+        {/* Neon Green Heading */}
+        <h2 className="text-3xl font-extrabold text-center text-emerald-400 mb-6 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">
+          Create Account
+        </h2>
+        
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-900/30 border border-red-500/50 text-red-400 p-3 rounded-lg mb-5 text-sm font-medium">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5 relative">
           
           <div className="flex gap-4">
             {/* First Name Input */}
@@ -65,7 +78,7 @@ export default function Register() {
               type="text" 
               placeholder="First Name" 
               required
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-slate-950/50 border border-slate-800 text-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all placeholder-slate-500"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
             />
@@ -74,7 +87,7 @@ export default function Register() {
               type="text" 
               placeholder="Last Name" 
               required
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 bg-slate-950/50 border border-slate-800 text-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all placeholder-slate-500"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
             />
@@ -85,7 +98,7 @@ export default function Register() {
             type="email" 
             placeholder="Email Address" 
             required
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 bg-slate-950/50 border border-slate-800 text-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all placeholder-slate-500"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -95,7 +108,7 @@ export default function Register() {
             type="text" 
             placeholder="Username" 
             required
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 bg-slate-950/50 border border-slate-800 text-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all placeholder-slate-500"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
@@ -105,16 +118,16 @@ export default function Register() {
             type="password" 
             placeholder="Password" 
             required
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 bg-slate-950/50 border border-slate-800 text-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all placeholder-slate-500"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          {/* Submit Button */}
+          {/* Submit Button with Neon Green Glow */}
           <button
             type="submit" 
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-200 disabled:bg-blue-300"
+            className="w-full bg-emerald-600 text-slate-50 font-bold py-3 rounded-xl hover:bg-emerald-500 transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Registering..." : "Register"}
           </button>
@@ -122,8 +135,11 @@ export default function Register() {
         </form>
 
         {/* Link to Login Page */}
-        <p className="mt-4 text-center text-slate-600">
-          Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login</Link>
+        <p className="mt-6 text-center text-slate-400 font-medium">
+          Already have an account?{' '}
+          <Link to="/login" className="text-emerald-400 hover:text-emerald-300 hover:underline transition-colors drop-shadow-[0_0_5px_rgba(52,211,153,0.3)]">
+            Login
+          </Link>
         </p>
       </div>
     </div>
