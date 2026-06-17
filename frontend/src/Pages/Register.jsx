@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import API from "../utils/axios.js";
+import toast from "react-hot-toast";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -30,9 +31,13 @@ export default function Register() {
         publicKey:"dummy_public_key",  // temparary dummy key
       })
 
+      toast.success("Account created successfully")
+
       navigate("/login")
 
     }catch(error){
+
+      toast.error(error.response?.data?.message || "registration failed")
       setError(error.response?.data?.message || "request failed")
       setLoading(false)
     }finally{
