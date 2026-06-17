@@ -1,5 +1,5 @@
 import {Outlet} from "react-router-dom";
-import {useAuthStore} from "../store/useAuthStore.js";
+import useAuthStore from "../store/useAuthStore.js";
 import { Navigate } from "react-router-dom";
 
 
