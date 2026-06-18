@@ -11,11 +11,10 @@ export const sendMessage=async(req,res)=>{
         const {id:receiverId}=req.params
 
         // sender
-        const {id:senderId}=req.user._id
+        const senderId=req.user._id
 
         if(!encryptedText){
-             return
-              res.status(400).
+             return res.status(400).
               json({
                  success: false, message: "Message content is required" 
                 });
