@@ -2,7 +2,7 @@ import User from "../models/user.js";
 
 
 
-export const serchUsers=async(req,res)=>{
+export const searchUsers=async(req,res)=>{
     try{
 
         const keyword=req.query.search
