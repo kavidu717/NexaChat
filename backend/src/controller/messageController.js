@@ -33,7 +33,7 @@ export const sendMessage=async(req,res)=>{
         res.status(200).
         json({
             success:true,
-            message:"Message sent successfully"
+            message:message
         })
 
     }catch(error){

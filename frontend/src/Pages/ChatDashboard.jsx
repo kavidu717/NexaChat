@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/useAuthStore";
 import toast from "react-hot-toast";
 import API from "../utils/axios.js";
+import CryptoJS from "crypto-js";
 
+ const SECRET_KEY = "nexachat_super_secret_key";
 
 const ChatDashboard = () => {
   const navigate = useNavigate();
@@ -20,6 +22,8 @@ const ChatDashboard = () => {
 
    const [contacts, setContacts]= useState([]);
    const [searchResults, setSearchResult]= useState([]);
+
+   const [messages,setMessages]= useState([]);
 
     
    const config={
@@ -45,6 +49,53 @@ const ChatDashboard = () => {
           fetchContacts();
         }
      }, [token])
+
+
+      useEffect(() => {
+  const fetchMessages = async () => {
+    if (!selectedChat) return;
+
+    try {
+      const response = await API.get(
+        `/messages/${selectedChat._id}`,
+        config
+      );
+
+      console.log("Messages from Database:", response.data);
+
+      // Decrypt messages received from the database
+      const decryptedMessages = response.data.messages.map((msg) => {
+        try {
+          const bytes = CryptoJS.AES.decrypt(
+            msg.encryptedText,
+            SECRET_KEY
+          );
+
+          const originalText = bytes.toString(CryptoJS.enc.Utf8);
+
+          return { ...msg, text: originalText };
+        } catch (err) {
+          console.log(err)
+          // Display a fallback message if decryption fails
+          return {
+            ...msg,
+            text: " This message is securely encrypted.",
+          };
+        }
+      });
+
+      setMessages(decryptedMessages);
+    } catch (error) {
+      console.error("Failed to load messages", error);
+    }
+  };
+
+  fetchMessages();
+
+  // Run when the selected chat changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [selectedChat]);
+
 
     
      const handleSearch = async (e) => {
@@ -91,14 +142,35 @@ const ChatDashboard = () => {
   };
 
   // Function to send a message (backend connection coming later)
-  const handleSendMessage = (e) => {
+  const handleSendMessage =async (e) => {
     e.preventDefault();
-    if (!message.trim()) return; // Stop if message is empty
+    if (!message.trim()) return; 
+    try{
+       // encrypt the message
+      const encryptedText = CryptoJS.AES.encrypt(message, SECRET_KEY).toString();
 
-    // TODO: Send message to backend here
-    console.log("Sending message:", message);
+      const response = await API.post(
+        `/messages/send/${selectedChat._id}`,
+        { encryptedText },
+        config
+      );
+
+      if (response.data.success) {
+        const newMsg=response.data.message
+         newMsg.text=message
+
+         setMessages([...messages, newMsg]);
+
+            setMessage(""); // Clear typing area
+      }
+          
     
-    setMessage(""); // Clear typing area
+    }catch(error){
+        console.error("Failed to send message", error);
+      toast.error("Failed to send message");
+    }
+    
+   
   };
 
   return (
@@ -204,18 +276,37 @@ const ChatDashboard = () => {
           </h3>
         </div>
 
-        {/* Middle part: Messages */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* --- අලුතින් හදපු මැසේජ් පෙන්වන කොටස --- */}
+        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 custom-scrollbar">
           {!selectedChat ? (
             <div className="flex items-center justify-center h-full">
               <p className="text-emerald-400/80 bg-emerald-950/30 border border-emerald-500/20 px-6 py-2.5 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.05)] text-sm font-medium">
                 Welcome to NexaChat! Select a user from the left to start chatting.
               </p>
             </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <p className="text-center text-xs text-slate-500 my-2">Start sending messages to {selectedChat.firstName}</p>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col gap-3 h-full justify-center">
+              <p className="text-center text-sm text-slate-500">No messages yet. Say hi to {selectedChat.firstName}!</p>
             </div>
+          ) : (
+            messages.map((msg, index) => {
+              // මැසේජ් එක යැව්වේ මමද කියලා බලනවා
+              const isMe = msg.senderId === authUser?._id;
+              
+              return (
+                <div key={index} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                  <div 
+                    className={`px-4 py-2.5 max-w-[70%] rounded-2xl shadow-sm text-sm ${
+                      isMe 
+                        ? "bg-emerald-600 text-slate-50 rounded-br-none" 
+                        : "bg-slate-800 text-slate-200 rounded-bl-none border border-slate-700"
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
 
@@ -224,7 +315,7 @@ const ChatDashboard = () => {
           <form onSubmit={handleSendMessage} className="flex gap-3 relative max-w-5xl mx-auto w-full">
             <input 
               type="text" 
-              placeholder="Type a message..." 
+              placeholder="Type an encrypted message..." 
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               disabled={!selectedChat} 
@@ -233,9 +324,12 @@ const ChatDashboard = () => {
             <button 
               type="submit"
               disabled={!selectedChat || !message.trim()} 
-              className="bg-emerald-600 text-slate-50 px-8 py-3.5 rounded-xl font-bold hover:bg-emerald-500 transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.2)] hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed" 
+              className="bg-emerald-600 text-slate-50 px-8 py-3.5 rounded-xl font-bold hover:bg-emerald-500 transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.2)] hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2" 
             >
-              Send
+              <span>Send</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
             </button>
           </form>
         </div>
