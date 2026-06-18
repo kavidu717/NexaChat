@@ -4,6 +4,7 @@ import useAuthStore from "../store/useAuthStore";
 import toast from "react-hot-toast";
 import API from "../utils/axios.js";
 import CryptoJS from "crypto-js";
+import  io  from "socket.io-client";
 
  const SECRET_KEY = "nexachat_super_secret_key";
 
@@ -24,6 +25,9 @@ const ChatDashboard = () => {
    const [searchResults, setSearchResult]= useState([]);
 
    const [messages,setMessages]= useState([]);
+   const [socket, setSocket]= useState(null)
+   const [unreadCounts, setUnreadCounts] = useState({});
+
 
     
    const config={
@@ -95,6 +99,59 @@ const ChatDashboard = () => {
   // Run when the selected chat changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [selectedChat]);
+
+  
+    // --- 1. Connect to the Socket Server ---
+useEffect(() => {
+  if (authUser) {
+    // Connect to the backend server and send the user ID
+    const newSocket = io("http://localhost:5000", {
+      query: {
+        userId: authUser._id,
+      },
+    });
+
+    setSocket(newSocket);
+
+    // Close the socket connection when the component unmounts
+    return () => newSocket.close();
+  }
+}, [authUser]);
+
+// --- 2. Listen for Real-Time Messages ---
+
+
+   useEffect(() => {
+  if (!socket) return;
+
+  const handleNewMessage = (newMessage) => {
+    if (selectedChat && newMessage.senderId === selectedChat._id) {
+      try {
+        const bytes = CryptoJS.AES.decrypt(
+          newMessage.encryptedText,
+          SECRET_KEY
+        );
+
+        newMessage.text = bytes.toString(CryptoJS.enc.Utf8);
+      } catch (err) {
+        console.log(err);
+        newMessage.text = " This message is securely encrypted.";
+      }
+
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    } else {
+      setUnreadCounts((prev) => ({
+        ...prev,
+        [newMessage.senderId]: (prev[newMessage.senderId] || 0) + 1,
+      }));
+    }
+  };
+
+  socket.on("newMessage", handleNewMessage);
+
+  return () => socket.off("newMessage", handleNewMessage);
+
+}, [socket, selectedChat]);
 
 
     
@@ -237,21 +294,34 @@ const ChatDashboard = () => {
             </p>
           ) : (
             <div className="flex flex-col gap-2">
-              {contacts.map((contact) => (
-                <div 
-                  key={contact._id} 
-                  onClick={() => setSelectedChat(contact)}
-                  className={`p-3 rounded-xl cursor-pointer transition-all border ${
-                    selectedChat?._id === contact._id 
-                      ? "bg-slate-800/80 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.1)]" 
-                      : "bg-slate-900/30 border-transparent hover:bg-slate-800/50 hover:border-slate-700"
-                  }`}
-                >
-                  <p className="font-semibold text-slate-200">{contact.firstName} {contact.lastName}</p>
-                  <p className="text-xs text-slate-400">@{contact.username}</p>
-                </div>
-              ))}
-            </div>
+  {contacts.map((contact) => (
+    <div
+      key={contact._id}
+      onClick={() => {
+        setSelectedChat(contact);
+        setUnreadCounts((prev) => ({ ...prev, [contact._id]: 0 }));
+      }}
+      className={`p-3 rounded-xl cursor-pointer transition-all border flex justify-between items-center ${
+        selectedChat?._id === contact._id
+          ? "bg-slate-800/80 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
+          : "bg-slate-900/30 border-transparent hover:bg-slate-800/50 hover:border-slate-700"
+      }`}
+    >
+      <div>
+        <p className="font-semibold text-slate-200">
+          {contact.firstName} {contact.lastName}
+        </p>
+        <p className="text-xs text-slate-400">@{contact.username}</p>
+      </div>
+
+      {unreadCounts[contact._id] > 0 && (
+        <div className="bg-emerald-500 text-slate-50 text-xs font-extrabold w-6 h-6 flex items-center justify-center rounded-full shadow-[0_0_10px_rgba(16,185,129,0.6)]">
+          {unreadCounts[contact._id]}
+        </div>
+      )}
+    </div>
+  ))}
+</div>
           )}
         </div>
 
@@ -276,7 +346,7 @@ const ChatDashboard = () => {
           </h3>
         </div>
 
-        {/* --- අලුතින් හදපු මැසේජ් පෙන්වන කොටස --- */}
+       
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 custom-scrollbar">
           {!selectedChat ? (
             <div className="flex items-center justify-center h-full">
@@ -290,7 +360,7 @@ const ChatDashboard = () => {
             </div>
           ) : (
             messages.map((msg, index) => {
-              // මැසේජ් එක යැව්වේ මමද කියලා බලනවා
+            
               const isMe = msg.senderId === authUser?._id;
               
               return (
