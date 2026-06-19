@@ -32,6 +32,26 @@ const io = new Server(server, {
 
     )
 
+    socket.on("typing",({senderId,receiverId})=>{
+         
+        const receiverSocketId=getReceiverSocketId(receiverId)
+        if(receiverSocketId){
+             io.to(receiverSocketId).emit("typing",senderId)
+        }
+
+
+    }
+    )
+
+
+    socket.on("stopTyping",({senderId,receiverId})=>{
+
+        const receiverSocketId=getReceiverSocketId(receiverId)
+        if(receiverSocketId){
+             io.to(receiverSocketId).emit("stopTyping",senderId)
+        }
+
+    })
     socket.on("disconnect", () => {
         console.log("User disconnected", socket.id);
 
