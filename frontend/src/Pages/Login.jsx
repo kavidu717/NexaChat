@@ -46,61 +46,58 @@ export default function Login(){
 
 
   return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gray-950 p-4 relative overflow-hidden">
       
-        {/* පිටුපසින් පෙනෙන ලස්සන කොළ පැහැති Ambient Glow එක */}
-        <div className="absolute w-[400px] h-[400px] bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+  {/* Main Container Card */}
+  <div className="relative bg-gray-900 p-8  shadow-xl w-full max-w-sm border border-gray-800">
+    
+    {/* Form Heading */}
+    <h2 className="text-3xl font-extrabold text-center text-orange-500 mb-6">
+      NexaChat Login
+    </h2>
 
-        {/* Dark Glassmorphism Card */}
-        <div className="relative bg-slate-900/80 backdrop-blur-xl p-8 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-800">
-          
-          {/* Neon Green Heading */}
-          <h2 className="text-3xl font-extrabold text-center text-emerald-400 mb-6 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">
-            NexaChat Login
-          </h2>
+    <form onSubmit={handleSubmit} className="space-y-5 relative">
+      
+      {/* Username Input */}
+      <input
+        type="text" 
+        placeholder="Username" 
+        required
+        className="w-full px-4 py-3 bg-gray-950/50 border border-gray-800 text-gray-200  focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all placeholder-gray-500"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
 
-          <form onSubmit={handleSubmit} className="space-y-5 relative">
-            
-            {/* Username Input */}
-            <input
-              type="text" 
-              placeholder="Username" 
-              required
-              className="w-full px-4 py-3 bg-slate-950/50 border border-slate-800 text-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all placeholder-slate-500"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
+      {/* Password Input */}
+      <input
+        type="password" 
+        placeholder="Password" 
+        required
+        className="w-full px-4 py-3 bg-gray-950/50 border border-gray-800 text-gray-200  focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all placeholder-gray-500"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
 
-            {/* Password Input */}
-            <input
-              type="password" 
-              placeholder="Password" 
-              required
-              className="w-full px-4 py-3 bg-slate-950/50 border border-slate-800 text-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all placeholder-slate-500"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+      {/* Submit Button */}
+      <button
+        type="submit" 
+        disabled={loading}
+        className="w-full bg-orange-600 text-gray-50 font-bold py-3  hover:bg-orange-500 transition-all duration-300 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading ? "Logging in..." : "Login"}
+      </button>
 
-            {/* Submit Button with Neon Green Glow */}
-            <button
-              type="submit" 
-              disabled={loading}
-              className="w-full bg-emerald-600 text-slate-50 font-bold py-3 rounded-xl hover:bg-emerald-500 transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Logging in..." : "Login"}
-            </button>
+    </form>
 
-          </form>
-
-          {/* Link to Register Page */}
-          <p className="mt-6 text-center text-slate-400 font-medium">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-emerald-400 hover:text-emerald-300 hover:underline transition-colors drop-shadow-[0_0_5px_rgba(52,211,153,0.3)]">
-              Register
-            </Link>
-          </p>
-        </div>
-      </div>
+    {/* Link to Register Page */}
+    <p className="mt-6 text-center text-gray-400 font-medium">
+      Don't have an account?{' '}
+      <Link to="/register" className="text-orange-500 hover:text-orange-400 hover:underline transition-colors">
+        Register
+      </Link>
+    </p>
+  </div>
+</div> 
   );
 };
 
