@@ -54,6 +54,23 @@ const ChatDashboard = () => {
         }
      }, [token])
 
+     useEffect(()=>{
+        
+      const fetchUnreadCounts = async () => {
+      try {
+        const response = await API.get("/messages/unread", config);
+        setUnreadCounts(response.data);
+      } catch (error) {
+        console.error("Failed to load unread counts", error);
+      }
+    };
+
+    if (token) {
+      fetchUnreadCounts();
+    }
+
+     },[token])
+
 
       useEffect(() => {
   const fetchMessages = async () => {
@@ -188,7 +205,17 @@ useEffect(() => {
          console.error("Failed to add contact", error);
        }
      }
+    
+     const handleSelectChat=async(contact)=>{
+         setSelectedChat(contact)
+         setUnreadCounts((prev) => ({ ...prev, [contact._id]: 0 }));
 
+         try{
+            await API.put(`/messages/mark-read/${contact._id}`, {}, config);
+         }catch(error){
+           console.error("Failed to mark messages as read", error);
+         }
+     }
 
 
   // Function to logout
@@ -294,13 +321,10 @@ useEffect(() => {
             </p>
           ) : (
             <div className="flex flex-col gap-2">
-  {contacts.map((contact) => (
+  {contacts.map((contact, index) => (
     <div
-      key={contact._id}
-      onClick={() => {
-        setSelectedChat(contact);
-        setUnreadCounts((prev) => ({ ...prev, [contact._id]: 0 }));
-      }}
+      key={`${contact._id}-${index}`}
+      onClick={() => handleSelectChat(contact)}
       className={`p-3 rounded-xl cursor-pointer transition-all border flex justify-between items-center ${
         selectedChat?._id === contact._id
           ? "bg-slate-800/80 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
