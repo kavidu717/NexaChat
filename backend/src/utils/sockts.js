@@ -33,6 +33,8 @@ const io = new Server(server, {
     )
 
     socket.on("typing",({senderId,receiverId})=>{
+
+        console.log(`User ${senderId} is typing to ${receiverId}`)
          
         const receiverSocketId=getReceiverSocketId(receiverId)
         if(receiverSocketId){

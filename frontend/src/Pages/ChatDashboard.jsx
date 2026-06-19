@@ -5,6 +5,8 @@ import toast from "react-hot-toast";
 import API from "../utils/axios.js";
 import CryptoJS from "crypto-js";
 import  io  from "socket.io-client";
+import Profile from "../components/Profile.jsx";
+
 
  const SECRET_KEY = "nexachat_super_secret_key";
 
@@ -27,8 +29,19 @@ const ChatDashboard = () => {
    const [messages,setMessages]= useState([]);
    const [socket, setSocket]= useState(null)
    const [unreadCounts, setUnreadCounts] = useState({});
+
+   const [isTyping, setIsTyping]= useState(false);
+   const [typingTimeout, setTypingTimeout]= useState(null);
+
+   const [isProfileOpen, setIsProfileOpen] = useState(false);
     
    const chatContainerRef = useRef(null);
+   
+   const selectedChatRef = useRef(selectedChat);
+
+     useEffect(() => {
+    selectedChatRef.current = selectedChat;
+  }, [selectedChat]);
 
    useEffect(() => {
     if (chatContainerRef.current) {
@@ -145,37 +158,63 @@ useEffect(() => {
 // --- 2. Listen for Real-Time Messages ---
 
 
-   useEffect(() => {
-  if (!socket) return;
+  useEffect(() => {
+    if (!socket) return;
 
-  const handleNewMessage = (newMessage) => {
-    if (selectedChat && newMessage.senderId === selectedChat._id) {
-      try {
-        const bytes = CryptoJS.AES.decrypt(
-          newMessage.encryptedText,
-          SECRET_KEY
-        );
+    // Handle receiving a new message
+    const handleNewMessage = (newMessage) => {
+      if (selectedChat && newMessage.senderId === selectedChat._id) {
+        try {
+          const bytes = CryptoJS.AES.decrypt(
+            newMessage.encryptedText,
+            SECRET_KEY
+          );
+          newMessage.text = bytes.toString(CryptoJS.enc.Utf8);
+        } catch (err) {
+          console.log(err);
+          newMessage.text = "This message is securely encrypted.";
+        }
 
-        newMessage.text = bytes.toString(CryptoJS.enc.Utf8);
-      } catch (err) {
-        console.log(err);
-        newMessage.text = " This message is securely encrypted.";
+        setMessages((prevMessages) => [...prevMessages, newMessage]);
+      } else {
+        setUnreadCounts((prev) => ({
+          ...prev,
+          [newMessage.senderId]: (prev[newMessage.senderId] || 0) + 1,
+        }));
       }
+    };
 
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-    } else {
-      setUnreadCounts((prev) => ({
-        ...prev,
-        [newMessage.senderId]: (prev[newMessage.senderId] || 0) + 1,
-      }));
-    }
-  };
+    // Handle when the user starts typing
+    const handleUserTyping = (data) => {
+       const currentChatId = selectedChatRef.current?._id; 
+      
+      console.log("Checking IDs:", data.senderId, "vs", currentChatId); 
+      
+      if (currentChatId && data.senderId === currentChatId) {
+        setIsTyping(true);
+      }
+    };
 
-  socket.on("newMessage", handleNewMessage);
+    // Handle when the user stops typing
+    const handleUserStopTyping = (data) => {
+      if (selectedChat && data.senderId === selectedChat._id) {
+        setIsTyping(false);
+      }
+    };
 
-  return () => socket.off("newMessage", handleNewMessage);
+    // Attach all socket listeners
+    socket.on("newMessage", handleNewMessage);
+    socket.on("typing", handleUserTyping);
+    socket.on("stopTyping", handleUserStopTyping);
 
-}, [socket, selectedChat]);
+    // Clean up listeners when component unmounts or dependencies change
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+      socket.off("typing", handleUserTyping);
+      socket.off("stopTyping", handleUserStopTyping);
+    };
+
+  }, [socket, selectedChat]);
 
 
     
@@ -232,6 +271,29 @@ useEffect(() => {
     navigate("/login"); // Go to login page
   };
 
+  const handleTyping = (e) => {
+
+    setMessage(e.target.value)
+       if (!selectedChat || !socket) return;
+       
+       socket.emit("typing", {
+         senderId: authUser._id,
+         receiverId: selectedChat._id,
+       });
+
+       if(typingTimeout) clearTimeout(typingTimeout)
+
+        const timeout = setTimeout(() => {
+             socket.emit("stopTyping", {
+              senderId: authUser._id,
+              receiverId: selectedChat._id,
+             });
+        },2000)
+
+        setTypingTimeout(timeout)
+    
+  }
+
   // Function to send a message (backend connection coming later)
   const handleSendMessage =async (e) => {
     e.preventDefault();
@@ -276,10 +338,25 @@ useEffect(() => {
       <h2 className="text-2xl font-extrabold text-orange-500">
         NexaChat
       </h2>
+
+          
       
       <p className="text-sm text-gray-400 mt-1">
         Hello, <span className="font-semibold text-gray-200">{authUser?.firstName || "User"}</span>!
       </p> 
+      <button 
+        onClick={() => setIsProfileOpen(true)}
+        className="mt-2 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1 rounded-lg transition-all"
+      >
+        View My Profile
+      </button>
+
+      {isProfileOpen && (
+    <Profile 
+      authUser={authUser} 
+      onClose={() => setIsProfileOpen(false)} 
+    />
+  )}
       
       {/* User Search Input */}
       <input 
@@ -389,6 +466,14 @@ useEffect(() => {
       <h3 className="text-lg font-bold text-gray-200">
         {selectedChat ? `${selectedChat.firstName} ${selectedChat.lastName}` : "Select a chat"}
       </h3>
+        
+        {isTyping && (
+          <span className="text-xs text-orange-400 font-medium animate-pulse mt-0.5">
+            typing...
+          </span>
+        )}
+
+
     </div>
 
     {/* Messages Container */}
@@ -438,7 +523,7 @@ useEffect(() => {
           type="text" 
           placeholder="Type a message..." 
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={handleTyping}
           disabled={!selectedChat} 
           className="flex-1 px-4 py-3 md:px-5 md:py-3.5 bg-gray-900/80 border border-gray-800 text-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
         />
