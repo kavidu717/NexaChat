@@ -1,24 +1,26 @@
-import {create} from "zustand";
- 
- const useAuthStore = create((set) => ({
-    authUser: null,
-    token:localStorage.getItem("chat_token") || null,
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-    // after login save data
-    setAuth:(user,token)=>{
-        localStorage.setItem("chat_token",token);
-        set({authUser:user,token:token})
-    },
+const useAuthStore = create(
+  persist(
+    (set) => ({
+      authUser: null,
+      token: null, // Persist middleware handles localStorage automatically
 
-    // after logout remove data
-    logout:()=>{
-        localStorage.removeItem("chat_token");
-        set({authUser:null,token:null})
+      // Save user and token after login
+      setAuth: (user, token) => {
+        set({ authUser: user, token: token });
+      },
+
+      // Clear user and token after logout
+      logout: () => {
+        set({ authUser: null, token: null });
+      }
+    }),
+    {
+      name: "chat_auth_storage", // Storage key name
     }
-    
-    
- }));
+  )
+);
 
-
- 
- export default useAuthStore
+export default useAuthStore;
