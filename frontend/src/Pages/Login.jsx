@@ -49,7 +49,7 @@ export default function Login(){
     <div className="min-h-screen flex items-center justify-center bg-gray-950 p-4 relative overflow-hidden">
       
   {/* Main Container Card */}
-  <div className="relative bg-gray-900 p-8 rounded-2xl shadow-xl w-full max-w-sm border border-gray-800">
+  <div className="relative bg-gray-900 p-8  shadow-xl w-full max-w-sm border border-gray-800">
     
     {/* Form Heading */}
     <h2 className="text-3xl font-extrabold text-center text-orange-500 mb-6">
@@ -63,7 +63,7 @@ export default function Login(){
         type="text" 
         placeholder="Username" 
         required
-        className="w-full px-4 py-3 bg-gray-950/50 border border-gray-800 text-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all placeholder-gray-500"
+        className="w-full px-4 py-3 bg-gray-950/50 border border-gray-800 text-gray-200  focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all placeholder-gray-500"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
@@ -73,7 +73,7 @@ export default function Login(){
         type="password" 
         placeholder="Password" 
         required
-        className="w-full px-4 py-3 bg-gray-950/50 border border-gray-800 text-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all placeholder-gray-500"
+        className="w-full px-4 py-3 bg-gray-950/50 border border-gray-800 text-gray-200  focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all placeholder-gray-500"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
@@ -82,7 +82,7 @@ export default function Login(){
       <button
         type="submit" 
         disabled={loading}
-        className="w-full bg-orange-600 text-gray-50 font-bold py-3 rounded-xl hover:bg-orange-500 transition-all duration-300 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-orange-600 text-gray-50 font-bold py-3  hover:bg-orange-500 transition-all duration-300 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? "Logging in..." : "Login"}
       </button>
