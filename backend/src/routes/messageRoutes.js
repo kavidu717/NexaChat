@@ -7,7 +7,7 @@ import { getMessage, sendMessage, getUnreadCounts, markMessagesAsRead } from "..
 const router = express.Router();
 
 router.get("/unread", protect, getUnreadCounts);
-router.get("/mark-read/:senderId", protect, markMessagesAsRead);
+router.put("/mark-read/:senderId", protect, markMessagesAsRead);
 
 
 router.get("/:id", protect, getMessage);
