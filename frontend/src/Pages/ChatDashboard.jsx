@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/useAuthStore";
 import toast from "react-hot-toast";
@@ -27,8 +27,15 @@ const ChatDashboard = () => {
    const [messages,setMessages]= useState([]);
    const [socket, setSocket]= useState(null)
    const [unreadCounts, setUnreadCounts] = useState({});
+    
+   const chatContainerRef = useRef(null);
 
+   useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
 
+  }, [messages]);
     
    const config={
     headers: {
@@ -371,7 +378,7 @@ useEffect(() => {
         </div>
 
        
-        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 custom-scrollbar">
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 custom-scrollbar">
           {!selectedChat ? (
             <div className="flex items-center justify-center h-full">
               <p className="text-emerald-400/80 bg-emerald-950/30 border border-emerald-500/20 px-6 py-2.5 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.05)] text-sm font-medium">
@@ -402,6 +409,8 @@ useEffect(() => {
               );
             })
           )}
+
+         
         </div>
 
         {/* Bottom part: Type message here */}
