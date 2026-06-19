@@ -78,3 +78,46 @@ export const getMessage=async(req,res)=>{
         })
     }
 }
+
+// Get unread message counts grouped by sender
+export const getUnreadCounts = async (req, res) => {
+    try {
+        const myId = req.user._id;
+
+        // Find unread messages sent to me and group them by sender
+        const unreadCounts = await Message.aggregate([
+            { $match: { receiverId: myId, isRead: false } },
+            { $group: { _id: "$senderId", count: { $sum: 1 } } }
+        ]);
+
+        // Convert the result into an easy-to-use object
+        const countsMap = {};
+        unreadCounts.forEach(item => {
+            countsMap[item._id.toString()] = item.count;
+        });
+
+        res.status(200).json(countsMap);
+    } catch (error) {
+        console.error("Error in getUnreadCounts", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+// Mark messages from a specific sender as read
+export const markMessagesAsRead = async (req, res) => {
+    try {
+        const myId = req.user._id;
+        const { senderId } = req.params;
+
+        // Update all unread messages from this sender to read
+        await Message.updateMany(
+            { senderId: senderId, receiverId: myId, isRead: false },
+            { $set: { isRead: true } }
+        );
+
+        res.status(200).json({ success: true, message: "Messages marked as read" });
+    } catch (error) {
+        console.error("Error in markMessagesAsRead", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
