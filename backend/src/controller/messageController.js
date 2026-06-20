@@ -1,56 +1,90 @@
 import Message from "../models/message.js";
 import { io, getReceiverSocketId } from "../utils/sockts.js";
+import{v2 as cloudinary} from "cloudinary";
+import streamifier from "streamifier";
 
-export const sendMessage=async(req,res)=>{
-    try{
 
-        const {encryptedText,messageType="text",mediaUrl=""}=req.body
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
+export const sendMessage = async (req, res) => {
+    try {
+        let { encryptedText = "" } = req.body;
 
         // receiver
-        const {id:receiverId}=req.params
+        const { id: receiverId } = req.params;
 
         // sender
-        const senderId=req.user._id
+        const senderId = req.user._id;
 
-        if(!encryptedText){
-             return res.status(400).
-              json({
-                 success: false, message: "Message content is required" 
-                });
+        let mediaUrl = "";
+        let messageType = "text";
+
+        // Check if either text OR a file is provided
+        if (!encryptedText && !req.file) {
+            return res.status(400).json({
+                success: false, 
+                message: "Message content or media is required" 
+            });
         }
 
+        // If a file is attached, upload it to Cloudinary
+        if (req.file) {
+            const isVideo = req.file.mimetype.startsWith("video");
+            const resourceType = isVideo ? "video" : "image";
+            messageType = isVideo ? "video" : "image";
+
+            const streamUpload = (req) => {
+                return new Promise((resolve, reject) => {
+                    let stream = cloudinary.uploader.upload_stream(
+                        { resource_type: resourceType, folder: "nexachat_media" },
+                        (error, result) => {
+                            if (result) {
+                                resolve(result);
+                            } else {
+                                reject(error);
+                            }
+                        }
+                    );
+                    streamifier.createReadStream(req.file.buffer).pipe(stream);
+                });
+            };
+
+            const result = await streamUpload(req);
+            mediaUrl = result.secure_url;
+        }
 
         // save message in the data base
-        const message=await Message.create({
+        const message = await Message.create({
             senderId,
             receiverId,
             encryptedText,
             messageType,
             mediaUrl
-        })
+        });
 
         // send message to the receiver
-        const receiverSocketId=getReceiverSocketId(receiverId)
+        const receiverSocketId = getReceiverSocketId(receiverId);
 
-        if(receiverSocketId){
-            io.to(receiverSocketId).emit("newMessage",message)
-        
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("newMessage", message);
         }
-        res.status(200).
-        json({
-            success:true,
-            message:message
-        })
 
-    }catch(error){
-        console.log(error)
-        res.status(500).
-        json({
-            message:"Internal server error"
-        })
+        res.status(200).json({
+            success: true,
+            message: message
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: "Internal server error"
+        });
     }
-}
+};
 
 export const getMessage=async(req,res)=>{
 
