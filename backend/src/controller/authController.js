@@ -1,38 +1,39 @@
 import User from "../models/user.js";
+import escapeString from "escape-string-regexp"
 
 
 
-export const searchUsers=async(req,res)=>{
-    try{
+export const searchUsers = async (req, res) => {
+    try {
+        const keyword = req.query.search;
 
-        const keyword=req.query.search
-
-        if(!keyword){
-            res.status(400)
-            .json({message:"Please enter a search keyword"})
-
+        if (!keyword) {
+            return res.status(400).json({
+                message: "Please enter a search keyword"
+            });
         }
-        
-        // find the users
-       const users=await User.find({_id:{$ne:req.user._id},username:{$regex:keyword,$options:"i"}}).select("firstName lastName username email")
-     
-       res.status(200)
-       .json({
-        success:true,
-        users
-       })
 
+        // Create a safe regex pattern
+        const safeKeyword = escapeStringRegexp(keyword);
 
-    }catch(error){
-        console.log(error)
+        // Search users by username (case-insensitive)
+        const users = await User.find({
+            _id: { $ne: req.user._id },
+            username: { $regex: safeKeyword, $options: "i" }
+        }).select("firstName lastName username email");
 
-        res.status(500)
-        .json(
-            {message:"Internal server error"
+        res.status(200).json({
+            success: true,
+            users
+        });
 
-            })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: "Internal server error"
+        });
     }
-}
+};
 
 export const addContact=async(req,res)=>{
 
