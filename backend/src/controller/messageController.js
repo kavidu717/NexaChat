@@ -5,9 +5,9 @@ import streamifier from "streamifier";
 
 
 cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloud_name:"doujmzgn3",
+    api_key:"757791128176963",
+    api_secret:"hXz4HtIOAlRmg22jQF0s2WOyXIo",
 });
 
 export const sendMessage = async (req, res) => {
